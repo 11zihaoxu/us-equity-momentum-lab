@@ -1,30 +1,28 @@
 # US Equity Momentum Lab
 
-A reproducible, long-only US ETF research project built around a dual-momentum rotation strategy. The repository contains the data downloader, signal logic, backtest engine, timing tests, transaction-cost assumptions and report generation code.
+A reproducible, long-only US ETF research project built around a dual-momentum rotation strategy. This repository contains the standalone backtest code, timing tests, transaction-cost assumptions, saved results and report images.
 
 This is a research project, not investment advice and not a promise of live performance.
 
-![Strategy report](results/01_report.png)
+![Strategy report](01_report.png)
 
 ## Strategy
 
 The primary configuration is a monthly long-only rotation across liquid US and global ETFs:
 
-- **Ranking signal:** 63-trading-day total return
-- **Trend filter:** price above its 200-trading-day moving average
-- **Absolute filter:** momentum must be positive
-- **Selection:** top three eligible ETFs, equal weight
-- **Safe asset:** unallocated capital is held in BIL
-- **Execution:** month-end close signal, next trading-day close execution
-- **Costs:** 10 basis points on one-way traded notional
+- Ranking signal: 63-trading-day total return
+- Trend filter: price above its 200-trading-day moving average
+- Absolute filter: momentum must be positive
+- Selection: top three eligible ETFs, equal weight
+- Safe asset: unallocated capital is held in BIL
+- Execution: month-end close signal, next trading-day close execution
+- Costs: 10 basis points on one-way traded notional
 
-Universe:
-
-`SPY, QQQ, IWM, EFA, EEM, TLT, IEF, GLD, VNQ, DBC` with `BIL` as the defensive asset.
+Universe: SPY, QQQ, IWM, EFA, EEM, TLT, IEF, GLD, VNQ and DBC. BIL is the defensive asset.
 
 ## Results
 
-The backtest runs from **2008-07-01 to 2026-09-16**, with data downloaded from Yahoo Finance adjusted-close history.
+The backtest runs from 2008-07-01 to 2026-09-16, using Yahoo Finance adjusted-close history.
 
 | Metric | Strategy | SPY buy & hold |
 |---|---:|---:|
@@ -36,23 +34,19 @@ The backtest runs from **2008-07-01 to 2026-09-16**, with data downloaded from Y
 | Calmar ratio | 0.33 | 0.26 |
 | Monthly hit rate | 62.1% | 67.6% |
 
-The primary objective is not to beat SPY on raw return. The strategy is designed to improve risk-adjusted behaviour and reduce drawdown. It gives up some upside while holding fewer assets and rotating into defensive exposure during unfavorable regimes.
+Out of sample from 2018-01-01 to 2026-09-16:
 
-### Out-of-sample split
-
-The strategy was frozen before interpreting the out-of-sample period.
-
-| Out-of-sample metric | Strategy | SPY |
+| Metric | Strategy | SPY |
 |---|---:|---:|
-| Period | 2018-01-01 to 2026-09-16 | 2018-01-01 to 2026-09-16 |
 | CAGR | 12.1% | 14.4% |
 | Sharpe ratio | 0.67 | 0.67 |
 | Maximum drawdown | -20.9% | -33.7% |
-| Monthly hit rate | 66.7% | 66.7% |
 
-![Strategy logic](results/02_strategy.png)
+The objective is not to beat SPY on raw return. The strategy is designed to improve risk-adjusted behaviour and reduce drawdown.
 
-![Robustness diagnostics](results/03_robustness.png)
+![Strategy logic](02_strategy.png)
+
+![Robustness diagnostics](03_robustness.png)
 
 ## Research Controls
 
@@ -62,33 +56,27 @@ The strategy was frozen before interpreting the out-of-sample period.
 - Adjusted close captures distributions and corporate actions.
 - A fixed 10 bps cost is charged against one-way turnover.
 - No shorting, leverage, market making or intraday assumptions are used.
-- A small pre-specified sensitivity set across momentum horizons and portfolio widths is saved to `results/parameter_sweep.csv`.
+- A fixed sensitivity set is saved to parameter_sweep.csv.
 - Tests verify that future price changes cannot alter historical allocations.
 
-## Project Structure
+## Repository Contents
 
-```text
-configs/                  Strategy configuration
-data/                     Local data cache (not committed)
-docs/                     Methodology notes
-results/                  Generated statistics, logs and report images
-scripts/                  Data, backtest and robustness runners
-src/equity_lab/           Core research package
-tests/                    Timing and metric tests
-```
+- dual_momentum_lab.py: standalone data downloader and backtest engine
+- test_dual_momentum_lab.py: timing and metric tests
+- summary.json: full-period, in-sample and out-of-sample metrics
+- parameter_sweep.csv: momentum-horizon and portfolio-width sensitivity
+- daily_returns.csv, monthly_returns.csv, monthly_weights.csv, rebalances.csv: result tables
+- 01_report.png, 02_strategy.png, 03_robustness.png: report images
 
 ## Reproduce
 
 The project requires Python 3.10+, pandas, numpy and Pillow.
 
-```bash
-python -m pip install -r requirements.txt
-python scripts/run_backtest.py --refresh-data
-python scripts/run_parameter_sweep.py
-python -m unittest discover -s tests -v
-```
+- Install dependencies: python -m pip install -r requirements.txt
+- Refresh data and run the backtest: python dual_momentum_lab.py --refresh-data
+- Run tests: python -m unittest test_dual_momentum_lab.py -v
 
-The raw price cache is written to `data/adjusted_close.csv` and is ignored by Git. Re-running the downloader refreshes the dataset from Yahoo Finance.
+The raw price cache is written to adjusted_close.csv and is ignored by Git. Re-running the script refreshes the dataset from Yahoo Finance.
 
 ## Limitations
 
